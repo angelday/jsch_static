@@ -164,13 +164,10 @@ async function loadEntityModels(entitiesMap, catalogMap) {
     }
 }
 
-// UI wiring: publicDir files are served at the server root — use '/V3TMF8.json' and '/catalog.json'
-document.getElementById('vpcUrl').value = '/V3TMF8.json';
-document.getElementById('catalogUrl').value = '/catalog.json';
-document.getElementById('loadBtn').addEventListener('click', async () => {
-    const vpcUrl = document.getElementById('vpcUrl').value.trim();
-    const catalogUrl = document.getElementById('catalogUrl').value.trim();
-    if (!vpcUrl || !catalogUrl) { alert('Please provide both URLs (or file paths served by your static server).'); return; }
+// Auto-load JSON assets from public dir and initialize scene
+(async function initAutoLoad() {
+    const vpcUrl = '/V3TMF8.json';
+    const catalogUrl = '/catalog.json';
 
     try {
         const [vpcResp, catalogResp] = await Promise.all([fetch(vpcUrl), fetch(catalogUrl)]);
@@ -183,6 +180,5 @@ document.getElementById('loadBtn').addEventListener('click', async () => {
         console.log('Loaded models into scene.');
     } catch (err) {
         console.error('Failed to load JSON or models:', err);
-        alert('Load failed - check console for details');
     }
-});
+})();

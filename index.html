@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>VPC Viewer (Three.js)</title>
+    <title>VPC Viewer</title>
     <style>
         html,
         body {
@@ -18,38 +18,10 @@
             height: 100%;
             display: block;
         }
-
-        #ui {
-            position: absolute;
-            left: 8px;
-            top: 8px;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px;
-            border-radius: 6px;
-        }
-
-        input {
-            width: 360px
-        }
     </style>
 </head>
 
 <body>
-    <div id="ui">
-        <div>
-            <label>VPC JSON URL: </label><br>
-            <input id="vpcUrl" placeholder="/V3TMF8.json" />
-        </div>
-        <div style="margin-top:6px;">
-            <label>Catalog JSON URL: </label><br>
-            <input id="catalogUrl" placeholder="/catalog.json" />
-        </div>
-        <div style="margin-top:6px; text-align:right;">
-            <button id="loadBtn">Load</button>
-        </div>
-    </div>
-
     <canvas id="canvas"></canvas>
 
     <script type="module" src="/src/main.js"></script>

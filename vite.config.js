@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite';
 
-// Serve files from ../assets as static public assets so catalog and VPC JSON are available at '/catalog.json' and '/V3TMF8.json'
+// Serve files from the in-repo `assets` folder as static public assets so
+// `catalog.json` and `V3TMF8.json` are available at '/assets/catalog.json' and '/assets/V3TMF8.json'
 export default defineConfig({
+    // project root (default) — keep '.' for clarity
     root: '.',
-    publicDir: '../assets',
+    // `publicDir` must be inside the project root; use the existing `assets` folder
+    publicDir: 'assets',
     build: {
         outDir: 'dist',
         rollupOptions: {

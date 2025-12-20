@@ -164,9 +164,9 @@ async function loadEntityModels(entitiesMap, catalogMap) {
     }
 }
 
-// UI wiring: default to catalog.json and V3TMF8.json in public dir (../assets)
-document.getElementById('vpcUrl').value = '/assets/V3TMF8.json';
-document.getElementById('catalogUrl').value = '/assets/catalog.json';
+// UI wiring: publicDir files are served at the server root — use '/V3TMF8.json' and '/catalog.json'
+document.getElementById('vpcUrl').value = '/V3TMF8.json';
+document.getElementById('catalogUrl').value = '/catalog.json';
 document.getElementById('loadBtn').addEventListener('click', async () => {
     const vpcUrl = document.getElementById('vpcUrl').value.trim();
     const catalogUrl = document.getElementById('catalogUrl').value.trim();

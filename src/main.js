@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { exportSceneAsZip } from './exportSceneZip.js';
 
 // Vite + Three.js main entry: loads catalog.json and V3TMF8.json from public dir (served from ../assets)
 
@@ -18,6 +19,15 @@ camera.position.set(5, 3, 5);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1, 0);
+
+const exportBtn = document.createElement('button');
+exportBtn.textContent = 'Export scene (zip)';
+exportBtn.style.position = 'fixed';
+exportBtn.style.top = '12px';
+exportBtn.style.left = '12px';
+exportBtn.style.zIndex = '10';
+exportBtn.disabled = true;
+document.body.appendChild(exportBtn);
 
 const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
 scene.add(hemi);
@@ -208,6 +218,11 @@ async function loadEntityModels(entitiesMap, catalogMap) {
             try {
                 const gltf = await new Promise((resolve, reject) => loader.load(modelPath, resolve, undefined, reject));
                 const root = gltf.scene || gltf.scenes[0] || new THREE.Group();
+                root.name = root.name || `product:${id}`;
+                root.userData = root.userData || {};
+                root.userData.sourceUrl = modelPath;
+                root.userData.entityId = id;
+                root.userData.catalogRef = ref;
                 applyTransformsToObject(root, catalogProduct, entity);
                 if (entity.isAttachedToFloor) snapToGroundIfNeeded(root);
                 productsGroup.add(root);
@@ -216,6 +231,10 @@ async function loadEntityModels(entitiesMap, catalogMap) {
             }
         } else {
             const empty = new THREE.Object3D();
+            empty.name = `product:${id}`;
+            empty.userData = empty.userData || {};
+            empty.userData.entityId = id;
+            empty.userData.catalogRef = ref;
             applyTransformsToObject(empty, catalogProduct || {}, entity);
             if (entity.isAttachedToFloor) snapToGroundIfNeeded(empty);
             productsGroup.add(empty);
@@ -237,6 +256,20 @@ async function loadEntityModels(entitiesMap, catalogMap) {
         const catalog = prepareCatalogData(catalogJson);
         await loadEntityModels(entities, catalog);
         console.log('Loaded models into scene.');
+
+        exportBtn.disabled = false;
+        exportBtn.onclick = async () => {
+            exportBtn.disabled = true;
+            try {
+                const result = await exportSceneAsZip({ scene, rootName: 'Products' });
+                console.log('Exported zip:', result);
+            } catch (e) {
+                console.error('Export failed:', e);
+                alert(`Export failed: ${e?.message || e}`);
+            } finally {
+                exportBtn.disabled = false;
+            }
+        };
     } catch (err) {
         console.error('Failed to load JSON or models:', err);
     }

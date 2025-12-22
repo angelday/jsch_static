@@ -57,7 +57,15 @@ window.addEventListener('resize', () => {
 
 // --- VPC/Catalog parsing helpers (port of VPCUtilz / CatalogUtils behaviour) ---
 function convertJSONVPCObject(jsonObj) {
-    const obj = { id: 'noValue', ref: 'noValue', parent: 'noValue', worldTransform: { x: 0, y: 0, z: 0, qw: 1, qx: 0, qy: 0, qz: 0 }, connection: {} };
+    const obj = {
+        id: 'noValue',
+        ref: 'noValue',
+        parent: 'noValue',
+        worldTransform: { x: 0, y: 0, z: 0, qw: 1, qx: 0, qy: 0, qz: 0 },
+        connection: {},
+        connectors: [],
+        isAttachedToFloor: false,
+    };
     if (jsonObj.id) obj.id = jsonObj.id;
     if (jsonObj.ref) obj.ref = jsonObj.ref;
     if (jsonObj.parent) obj.parent = jsonObj.parent;
@@ -78,7 +86,25 @@ function convertJSONVPCObject(jsonObj) {
         }
         obj.worldTransform = wt;
     }
+
+    if (jsonObj.c && jsonObj.c.Connections && Array.isArray(jsonObj.c.Connections.connections)) {
+        const connectors = jsonObj.c.Connections.connections
+            .map((c) => c && c.guestConnector)
+            .filter((v) => typeof v === 'string');
+        obj.connectors = connectors;
+        obj.isAttachedToFloor = connectors.some((c) => c === 'connect-to-floor' || c.startsWith('attach-to-floor'));
+    }
     return obj;
+}
+
+function snapToGroundIfNeeded(obj3d, epsilon = 1e-4) {
+    obj3d.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(obj3d);
+    if (!Number.isFinite(box.min.y)) return;
+    if (box.min.y < -epsilon) {
+        obj3d.position.y += -box.min.y;
+        obj3d.updateMatrixWorld(true);
+    }
 }
 
 function prepareEntityData(vpcJson) {
@@ -112,8 +138,9 @@ function getModelTransformComponentData(catalogProduct) {
         }
         if (mt.p) {
             transformData.position[0] = (mt.p.x || 0) / 1000;
-            transformData.position[2] = (mt.p.y || 0) / 1000;
-            transformData.position[1] = -((mt.p.z || 0) / 1000);
+            // VPC uses Y-up; keep Y as vertical. Match worldTransform's Z sign flip.
+            transformData.position[1] = (mt.p.y || 0) / 1000;
+            transformData.position[2] = -((mt.p.z || 0) / 1000);
         }
         if (mt.s) {
             transformData.scale[0] = mt.s.x || 1;
@@ -121,32 +148,57 @@ function getModelTransformComponentData(catalogProduct) {
             transformData.scale[1] = mt.s.z || 1;
         }
     }
+
+    // Many VPC world positions appear to be the *center* of the object (e.g. y ~= height/2).
+    // If the catalog doesn't provide an explicit vertical offset, shift down by half height.
+    const hasExplicitVerticalOffset =
+        !!(catalogProduct && catalogProduct.template && catalogProduct.template.modelTransform &&
+            catalogProduct.template.modelTransform.p &&
+            catalogProduct.template.modelTransform.p.y !== undefined);
+
+    // Wall-mounted items (pictures/frames) are typically already positioned correctly by VPC worldTransform.
+    // Applying the generic center->base fallback would drop them far too low.
+    const templateId = catalogProduct?.template?.id;
+    const isWallMountedTemplate =
+        templateId === 'picture-frame' ||
+        templateId === 'picture' ||
+        templateId === 'wall-item' ||
+        templateId === 'wall-item-no-rotation';
+
+    const heightMm = catalogProduct?.template?.size?.height;
+    if (!isWallMountedTemplate && !hasExplicitVerticalOffset && typeof heightMm === 'number' && Number.isFinite(heightMm)) {
+        transformData.position[1] += -(heightMm / 2000);
+    }
     return transformData;
 }
 
 function applyTransformsToObject(obj3d, catalogProduct, entity) {
     const mt = getModelTransformComponentData(catalogProduct);
-    obj3d.position.add(new THREE.Vector3(mt.position[0], mt.position[1], mt.position[2]));
     obj3d.scale.set(mt.scale[0], mt.scale[1], mt.scale[2]);
 
     const wt = entity.worldTransform || { x: 0, y: 0, z: 0, qw: 1, qx: 0, qy: 0, qz: 0 };
     const px = wt.x || 0;
     const py = wt.y || 0;
     const pz = wt.z || 0;
-    obj3d.position.set(px, py, -pz);
-
     const qx = wt.qx || 0;
     const qy = wt.qy || 0;
     const qz = wt.qz || 0;
     const qw = (wt.qw !== undefined) ? wt.qw : 1;
 
+    const worldQuat = new THREE.Quaternion(qx, qy, -qz, qw).normalize();
+
+    // Compose world position with the catalog model offset in the entity's local frame.
+    // (The old code added the model offset and then overwrote it.)
+    const worldPos = new THREE.Vector3(px, py, -pz);
+    const modelOffset = new THREE.Vector3(mt.position[0], mt.position[1], mt.position[2]).applyQuaternion(worldQuat);
+    obj3d.position.copy(worldPos.add(modelOffset));
+
     // Compose world rotation (entity) with local model rotation (catalog).
     // Order matters: world * model applies the model's rotation in the entity's local frame.
-    const worldQuat = new THREE.Quaternion(qx, qy, -qz, qw).normalize();
     const modelQuat = new THREE.Quaternion().setFromEuler(
         new THREE.Euler(mt.rotation[0], mt.rotation[1], mt.rotation[2], 'XYZ')
     );
-    obj3d.quaternion.copy(worldQuat.multiply(modelQuat)).normalize();
+    obj3d.quaternion.copy(worldQuat.clone().multiply(modelQuat)).normalize();
 }
 
 async function loadEntityModels(entitiesMap, catalogMap) {
@@ -166,6 +218,7 @@ async function loadEntityModels(entitiesMap, catalogMap) {
                 const gltf = await new Promise((resolve, reject) => loader.load(modelPath, resolve, undefined, reject));
                 const root = gltf.scene || gltf.scenes[0] || new THREE.Group();
                 applyTransformsToObject(root, catalogProduct, entity);
+                if (entity.isAttachedToFloor) snapToGroundIfNeeded(root);
                 productsGroup.add(root);
             } catch (err) {
                 console.error('Failed to load model', modelPath, err);
@@ -173,6 +226,7 @@ async function loadEntityModels(entitiesMap, catalogMap) {
         } else {
             const empty = new THREE.Object3D();
             applyTransformsToObject(empty, catalogProduct || {}, entity);
+            if (entity.isAttachedToFloor) snapToGroundIfNeeded(empty);
             productsGroup.add(empty);
         }
     }

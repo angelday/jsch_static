@@ -19,13 +19,6 @@ camera.position.set(5, 3, 5);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1, 0);
 
-// Smooth damping and automatic rotation for an orbiting view
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 1.0; // adjust to taste
-controls.update();
-
 const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
 scene.add(hemi);
 const dir = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -43,8 +36,6 @@ loader.setDRACOLoader(dracoLoader);
 
 function animate() {
     requestAnimationFrame(animate);
-    // update controls each frame so autoRotate and damping work
-    // controls.update();
     renderer.render(scene, camera);
 }
 animate();

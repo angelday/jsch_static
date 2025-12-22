@@ -18,6 +18,7 @@ camera.position.set(5, 3, 5);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1, 0);
+
 // Smooth damping and automatic rotation for an orbiting view
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -43,7 +44,7 @@ loader.setDRACOLoader(dracoLoader);
 function animate() {
     requestAnimationFrame(animate);
     // update controls each frame so autoRotate and damping work
-    controls.update();
+    // controls.update();
     renderer.render(scene, camera);
 }
 animate();
@@ -125,7 +126,6 @@ function getModelTransformComponentData(catalogProduct) {
 
 function applyTransformsToObject(obj3d, catalogProduct, entity) {
     const mt = getModelTransformComponentData(catalogProduct);
-    obj3d.rotation.set(mt.rotation[0], mt.rotation[1], mt.rotation[2]);
     obj3d.position.add(new THREE.Vector3(mt.position[0], mt.position[1], mt.position[2]));
     obj3d.scale.set(mt.scale[0], mt.scale[1], mt.scale[2]);
 
@@ -139,7 +139,14 @@ function applyTransformsToObject(obj3d, catalogProduct, entity) {
     const qy = wt.qy || 0;
     const qz = wt.qz || 0;
     const qw = (wt.qw !== undefined) ? wt.qw : 1;
-    obj3d.quaternion.set(qx, qy, -qz, qw);
+
+    // Compose world rotation (entity) with local model rotation (catalog).
+    // Order matters: world * model applies the model's rotation in the entity's local frame.
+    const worldQuat = new THREE.Quaternion(qx, qy, -qz, qw).normalize();
+    const modelQuat = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(mt.rotation[0], mt.rotation[1], mt.rotation[2], 'XYZ')
+    );
+    obj3d.quaternion.copy(worldQuat.multiply(modelQuat)).normalize();
 }
 
 async function loadEntityModels(entitiesMap, catalogMap) {

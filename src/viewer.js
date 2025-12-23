@@ -6,8 +6,6 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const canvas = document.getElementById('canvas');
 
-// Vite serves `publicDir` (the in-repo `assets/` folder) at the site root.
-// So `assets/scene/scene_V3TMF8.json` is available at `scene/scene_V3TMF8.json`.
 const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
 const SCENE_BASE_URL = 'scene/';
 
@@ -27,17 +25,6 @@ controls.enableDamping = true;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.5;
 controls.update();
-
-// Lights and Grid removed for blueprint look
-/*
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.0));
-const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-dir.position.set(5, 10, 7.5);
-scene.add(dir);
-
-const grid = new THREE.GridHelper(20, 40);
-scene.add(grid);
-*/
 
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
@@ -69,30 +56,9 @@ function applyTransform(obj, transform) {
     obj.scale.set(s[0], s[1], s[2]);
 }
 
-async function loadGltfFromBlobUrl(url) {
-    return await new Promise((resolve, reject) => {
-        loader.load(url, resolve, undefined, reject);
-    });
-}
-
-function setUserData(obj, userData) {
-    if (userData && typeof userData === 'object') {
-        obj.userData = { ...userData };
-    }
-}
-
-function resolveAssetUrl(assetNameOrPath) {
-    const raw = String(assetNameOrPath || '').trim();
-    if (!raw) return '';
-    if (/^https?:\/\//i.test(raw)) return raw;
-    // Scene export uses paths like `models/xxx.glb` relative to the scene folder.
-    const cleaned = raw.replace(/^\/+/, '');
-    return SCENE_BASE_URL + cleaned;
-}
+const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
 function applyFlatWhiteStyle(object) {
-    const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
     object.traverse((child) => {
         if (child.isMesh) {
             child.material = whiteMaterial;
@@ -104,20 +70,15 @@ async function buildNode(node, gltfCache) {
     const obj = new THREE.Group();
     obj.name = node?.name || '';
     applyTransform(obj, node?.transform);
-    setUserData(obj, node?.userData);
+    if (node?.userData) obj.userData = { ...node.userData };
 
     // Support nodes that have both an asset and children.
     if (node?.asset) {
-        const assetUrl = resolveAssetUrl(node.asset);
-        if (!assetUrl) {
-            throw new Error(`Invalid asset path for node '${obj.name}'`);
-        }
+        const assetUrl = SCENE_BASE_URL + node.asset;
 
         let gltfPromise = gltfCache.get(assetUrl);
         if (!gltfPromise) {
-            gltfPromise = (async () => {
-                return await loadGltfFromBlobUrl(assetUrl);
-            })();
+            gltfPromise = loader.loadAsync(assetUrl);
             gltfCache.set(assetUrl, gltfPromise);
         }
 
@@ -141,13 +102,6 @@ async function rebuildFromSceneJson(sceneJson) {
         scene.remove(loadedRoot);
         loadedRoot = null;
     }
-
-    // Force blueprint look, ignore scene background
-    /*
-    if (sceneJson?.scene?.background?.type === 'color' && typeof sceneJson.scene.background.hex === 'number') {
-        scene.background = new THREE.Color(sceneJson.scene.background.hex);
-    }
-    */
 
     const gltfCache = new Map();
 
@@ -174,27 +128,12 @@ async function rebuildFromSceneJson(sceneJson) {
 
 (async function init() {
     try {
-        console.log('Loading scene JSON:', SCENE_JSON_URL);
-        console.log('Scene base URL:', SCENE_BASE_URL);
-
-        const resp = await fetch(SCENE_JSON_URL, { cache: 'no-store' });
-        const contentType = resp.headers.get('content-type') || '';
-        const bodyText = await resp.text();
-        if (!resp.ok) {
-            throw new Error(`Failed to fetch scene JSON (${resp.status}) from ${resp.url || SCENE_JSON_URL}`);
-        }
-        if (!contentType.toLowerCase().includes('application/json')) {
-            const snippet = bodyText.slice(0, 200).replace(/\s+/g, ' ').trim();
-            throw new Error(
-                `Scene URL did not return JSON (content-type: ${contentType || 'unknown'}). ` +
-                `URL: ${resp.url || SCENE_JSON_URL}. Body starts with: ${snippet}`
-            );
-        }
-
-        const sceneJson = JSON.parse(bodyText);
+        const resp = await fetch(SCENE_JSON_URL);
+        if (!resp.ok) throw new Error(`Failed to load scene (${resp.status})`);
+        const sceneJson = await resp.json();
         await rebuildFromSceneJson(sceneJson);
     } catch (e) {
         console.error(e);
-        alert(`Failed to load scene: ${e?.message || e}`);
+        alert(`Error: ${e.message}`);
     }
 })();

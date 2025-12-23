@@ -111,19 +111,6 @@ async function rebuildFromSceneJson(sceneJson) {
 
     loadedRoot = await buildNode(rootNode, gltfCache);
     scene.add(loadedRoot);
-
-    const box = new THREE.Box3().setFromObject(loadedRoot);
-    if (Number.isFinite(box.min.x)) {
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        controls.target.copy(center);
-
-        // Frame the scene (simple heuristic).
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const dist = Math.max(2, maxDim * 1.3);
-        camera.position.copy(center).add(new THREE.Vector3(dist, dist * 0.6, dist));
-        controls.update();
-    }
 }
 
 (async function init() {

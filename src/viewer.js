@@ -3,9 +3,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 
 const canvas = document.getElementById('canvas');
 
@@ -48,7 +45,6 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
 loader.setDRACOLoader(dracoLoader);
 
 let loadedRoot = null;
-const lineMaterials = [];
 
 function animate() {
     requestAnimationFrame(animate);
@@ -61,12 +57,6 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    lineMaterials.forEach(mat => {
-        mat.resolution.set(width, height);
-    });
 });
 
 function applyTransform(obj, transform) {
@@ -100,39 +90,14 @@ function resolveAssetUrl(assetNameOrPath) {
     return SCENE_BASE_URL + cleaned;
 }
 
-function applyBlueprintStyle(object) {
-    const lineColor = 0xFFFFFF; //0x0058A3;
-    const bgColor = 0xFFFFFF; //0xFFDB00;
+function applyFlatWhiteStyle(object) {
+    const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-    const meshes = [];
     object.traverse((child) => {
-        if (child.isMesh && !child.isLineSegments2) {
-            meshes.push(child);
+        if (child.isMesh) {
+            child.material = whiteMaterial;
         }
     });
-
-    for (const child of meshes) {
-        child.material = new THREE.MeshBasicMaterial({
-            color: bgColor,
-            polygonOffset: true,
-            polygonOffsetFactor: 1,
-            polygonOffsetUnits: 1
-        });
-
-        const edges = new THREE.EdgesGeometry(child.geometry, 15);
-        const lineGeometry = new LineSegmentsGeometry();
-        lineGeometry.setPositions(edges.attributes.position.array);
-
-        const lineMaterial = new LineMaterial({
-            color: lineColor,
-            linewidth: 2,
-            resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
-        });
-        lineMaterials.push(lineMaterial);
-
-        const line = new LineSegments2(lineGeometry, lineMaterial);
-        child.add(line);
-    }
 }
 
 async function buildNode(node, gltfCache) {
@@ -159,7 +124,7 @@ async function buildNode(node, gltfCache) {
         const gltf = await gltfPromise;
         // Clone for per-instance transforms; SkeletonUtils handles skinned meshes better.
         const model = SkeletonUtils.clone(gltf.scene);
-        applyBlueprintStyle(model);
+        applyFlatWhiteStyle(model);
         obj.add(model);
     }
 
@@ -176,8 +141,6 @@ async function rebuildFromSceneJson(sceneJson) {
         scene.remove(loadedRoot);
         loadedRoot = null;
     }
-
-    lineMaterials.length = 0;
 
     // Force blueprint look, ignore scene background
     /*

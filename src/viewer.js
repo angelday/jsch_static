@@ -31,9 +31,38 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
 loader.setDRACOLoader(dracoLoader);
 
 let loadedRoot = null;
+let revealInterval = null;
+const fadingObjects = [];
+
+function startFadeIn(object) {
+    object.visible = true;
+    fadingObjects.push({
+        object,
+        startTime: performance.now(),
+        duration: 500
+    });
+}
 
 function animate() {
     requestAnimationFrame(animate);
+
+    const now = performance.now();
+    for (let i = fadingObjects.length - 1; i >= 0; i--) {
+        const item = fadingObjects[i];
+        const elapsed = now - item.startTime;
+        const t = Math.min(elapsed / item.duration, 1);
+
+        item.object.traverse((child) => {
+            if (child.isMesh) {
+                child.material.opacity = t;
+            }
+        });
+
+        if (t >= 1) {
+            fadingObjects.splice(i, 1);
+        }
+    }
+
     controls.update();
     renderer.render(scene, camera);
 }
@@ -55,12 +84,14 @@ function applyTransform(obj, transform) {
     obj.scale.set(s[0], s[1], s[2]);
 }
 
-const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
 function applyFlatWhiteStyle(object) {
     object.traverse((child) => {
         if (child.isMesh) {
-            child.material = whiteMaterial;
+            child.material = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0
+            });
         }
     });
 }
@@ -85,6 +116,15 @@ async function buildNode(node, gltfCache) {
         // Clone for per-instance transforms.
         const model = gltf.scene.clone();
         applyFlatWhiteStyle(model);
+
+        // Hide initially for staggered reveal
+        model.visible = false;
+        model.userData.isAnimatable = true;
+        // Propagate entityId to the model so we can find it later
+        if (node?.userData?.entityId) {
+            model.userData.entityId = node.userData.entityId;
+        }
+
         obj.add(model);
     }
 
@@ -101,6 +141,10 @@ async function rebuildFromSceneJson(sceneJson) {
         scene.remove(loadedRoot);
         loadedRoot = null;
     }
+    if (revealInterval) {
+        clearInterval(revealInterval);
+        revealInterval = null;
+    }
 
     const gltfCache = new Map();
 
@@ -110,6 +154,25 @@ async function rebuildFromSceneJson(sceneJson) {
 
     loadedRoot = await buildNode(rootNode, gltfCache);
     scene.add(loadedRoot);
+
+    // Staggered reveal
+    const itemsToReveal = [];
+    loadedRoot.traverse((child) => {
+        if (child.userData.isAnimatable) {
+            itemsToReveal.push(child);
+        }
+    });
+
+    let index = 0;
+    revealInterval = setInterval(() => {
+        if (index >= itemsToReveal.length) {
+            clearInterval(revealInterval);
+            revealInterval = null;
+            return;
+        }
+        startFadeIn(itemsToReveal[index]);
+        index++;
+    }, 250);
 }
 
 (async function init() {

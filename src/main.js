@@ -244,8 +244,8 @@ async function loadEntityModels(entitiesMap, catalogMap) {
 
 // Auto-load JSON assets from public dir and initialize scene
 (async function initAutoLoad() {
-    const vpcUrl = '/V3TMF8.json';
-    const catalogUrl = '/catalog.json';
+    const vpcUrl = 'V3TMF8.json';
+    const catalogUrl = 'catalog.json';
 
     try {
         const [vpcResp, catalogResp] = await Promise.all([fetch(vpcUrl), fetch(catalogUrl)]);

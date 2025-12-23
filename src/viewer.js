@@ -22,7 +22,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0.415, 0.257, -0.262);
 controls.enableDamping = true;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 0.5;
+controls.autoRotateSpeed = 1.0;
 controls.update();
 
 const loader = new GLTFLoader();

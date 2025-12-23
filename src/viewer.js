@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const canvas = document.getElementById('canvas');
 
@@ -83,8 +82,8 @@ async function buildNode(node, gltfCache) {
         }
 
         const gltf = await gltfPromise;
-        // Clone for per-instance transforms; SkeletonUtils handles skinned meshes better.
-        const model = SkeletonUtils.clone(gltf.scene);
+        // Clone for per-instance transforms.
+        const model = gltf.scene.clone();
         applyFlatWhiteStyle(model);
         obj.add(model);
     }

@@ -16,10 +16,10 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xFFDB00);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 2000);
-camera.position.set(5, 3, 5);
+camera.position.set(4.275, 1.657, 1.320);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1, 0);
+controls.target.set(0.415, 0.257, -0.262);
 controls.enableDamping = true;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.5;

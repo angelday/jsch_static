@@ -10,9 +10,9 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 const canvas = document.getElementById('canvas');
 
 // Vite serves `publicDir` (the in-repo `assets/` folder) at the site root.
-// So `assets/scene/scene_V3TMF8.json` is available at `/scene/scene_V3TMF8.json`.
-const SCENE_JSON_URL = '/scene/scene_V3TMF8.json';
-const SCENE_BASE_URL = '/scene/';
+// So `assets/scene/scene_V3TMF8.json` is available at `scene/scene_V3TMF8.json`.
+const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
+const SCENE_BASE_URL = 'scene/';
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);

@@ -6,6 +6,8 @@ import { resolve } from 'node:path';
 export default defineConfig({
     // project root (default) — keep '.' for clarity
     root: '.',
+    // Use relative base path so the site works in any subdirectory (e.g. on a CDN)
+    base: './',
     // `publicDir` must be inside the project root; use the existing `assets` folder
     publicDir: 'assets',
     build: {

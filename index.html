@@ -2,29 +2,62 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>VPC Scene Viewer</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Józsi experimental</title>
     <style>
-        html,
         body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.5;
         }
 
-        #canvas {
-            width: 100%;
-            height: 100%;
+        h1 {
+            margin-bottom: 2rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 1rem;
+            color: red;
+
+        }
+
+        a {
             display: block;
+            padding: 1rem;
+            background: #f0f0f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        a:hover {
+            background: #e0e0e0;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="canvas"></canvas>
-
-    <script type="module" src="/src/viewer.js"></script>
+    <h1>Józsi experimental stuff</h1>
+    <ul>
+        <li><a href="/explorer/">VPC Explorer (Vanilla JS) – converts a VPC into a JSON blob I can use</a></li>
+        <li><a href="/planner/">Planner (React + R3F) – some experiments</a></li>
+        <li><strong>PROD</strong> <a href="/interactive/">Homepage Interactive fragment (React + R3F) – used in the
+                "currently" section</a>
+        </li>
+        <li><strong>PROD</strong> <a href="/visualization/">Homepage Visualization fragment (Vanilla JS) – used in the
+                "currently" section
+                expanded view</a></li>
+    </ul>
 </body>
 
 </html>

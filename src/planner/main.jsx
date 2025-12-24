@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Canvas } from '@react-three/fiber';
-import Experience from './PlannerExperience.jsx';
-import CameraInfo, { CameraTracker, FpsTracker } from './PlannerCameraInfo.jsx';
+import Experience from './Experience.jsx';
+import CameraInfo, { CameraTracker, FpsTracker } from './CameraInfo.jsx';
 
 function App() {
     // Hardcoded to true for Planner

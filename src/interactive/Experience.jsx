@@ -3,8 +3,8 @@ import { useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
-const SCENE_BASE_URL = 'scene/';
+const SCENE_JSON_URL = '../scene/scene_V3TMF8.json';
+const SCENE_BASE_URL = '../scene/';
 const DRACO_URL = 'https://www.gstatic.com/draco/v1/decoders/';
 
 function Model({ url, showTextures, isDragging }) {

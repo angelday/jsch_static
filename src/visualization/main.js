@@ -5,8 +5,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const canvas = document.getElementById('canvas');
 
-const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
-const SCENE_BASE_URL = 'scene/';
+const SCENE_JSON_URL = '../scene/scene_V3TMF8.json';
+const SCENE_BASE_URL = '../scene/';
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);

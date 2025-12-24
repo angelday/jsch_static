@@ -16,10 +16,11 @@ export default defineConfig({
         outDir: 'dist',
         rollupOptions: {
             input: {
-                main: resolve(__dirname, 'index.html'),
-                explorer: resolve(__dirname, 'vpc_explorer.html'),
-                interactive: resolve(__dirname, 'interactive.html'),
-                planner: resolve(__dirname, 'planner.html'),
+                index: resolve(__dirname, 'index.html'),
+                homepage_visualization: resolve(__dirname, 'visualization/index.html'),
+                homepage_interactive: resolve(__dirname, 'interactive/index.html'),
+                explorer: resolve(__dirname, 'explorer/index.html'),
+                planner: resolve(__dirname, 'planner/index.html'),
             }
         }
     }

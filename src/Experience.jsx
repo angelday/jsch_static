@@ -89,10 +89,12 @@ function Node({ node, showTextures }) {
 
         // Calculate intersection with the floor plane at the object's current height
         plane.constant = -position.y;
-        e.ray.intersectPlane(plane, intersection.current);
+        const intersect = e.ray.intersectPlane(plane, intersection.current);
 
         // Store offset between intersection point and object center
-        offset.current.copy(intersection.current).sub(position);
+        if (intersect) {
+            offset.current.copy(intersect).sub(position);
+        }
 
         e.target.setPointerCapture(e.pointerId);
     };
@@ -115,11 +117,18 @@ function Node({ node, showTextures }) {
         e.stopPropagation();
 
         // Calculate new position
-        e.ray.intersectPlane(plane, intersection.current);
-        const newPos = new THREE.Vector3().copy(intersection.current).sub(offset.current);
+        const intersect = e.ray.intersectPlane(plane, intersection.current);
+        if (!intersect) return;
+
+        const newPos = new THREE.Vector3().copy(intersect).sub(offset.current);
 
         // Constrain Y to initial height (lateral movement only)
         newPos.y = position.y;
+
+        // Constrain to grid bounds (size 20 => -10 to 10)
+        const LIMIT = 10;
+        newPos.x = Math.max(-LIMIT, Math.min(LIMIT, newPos.x));
+        newPos.z = Math.max(-LIMIT, Math.min(LIMIT, newPos.z));
 
         setPosition(newPos);
     };

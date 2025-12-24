@@ -5,9 +5,7 @@ import Experience from './Experience.jsx';
 import CameraInfo, { CameraTracker, FpsTracker } from './CameraInfo.jsx';
 
 function App() {
-    // Hardcoded to true for Planner
-    const showTextures = true;
-    const [autoRotate, setAutoRotate] = useState(true);
+    const [autoRotate, setAutoRotate] = useState(false);
     const [resetKey, setResetKey] = useState(0);
 
     return (
@@ -64,7 +62,7 @@ function App() {
             >
                 <FpsTracker />
                 <CameraTracker />
-                <Experience key={resetKey} showTextures={showTextures} autoRotate={autoRotate} />
+                <Experience key={resetKey} autoRotate={autoRotate} />
             </Canvas>
         </>
     );

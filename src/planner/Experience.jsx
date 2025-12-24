@@ -7,7 +7,7 @@ const SCENE_JSON_URL = '../scene/scene_V3TMF8.json';
 const SCENE_BASE_URL = '../scene/';
 const DRACO_URL = 'https://www.gstatic.com/draco/v1/decoders/';
 
-function Model({ url, showTextures, isDragging }) {
+function Model({ url, isDragging }) {
     // Load the GLTF model
     const { scene } = useGLTF(SCENE_BASE_URL + url, DRACO_URL);
 
@@ -27,11 +27,6 @@ function Model({ url, showTextures, isDragging }) {
                 hoverMat.emissiveIntensity = 0.2;
 
                 child.userData.texturedHoverMaterial = hoverMat;
-
-                // Create flat material
-                child.userData.flatMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                // Default to flat
-                child.material = child.userData.flatMaterial;
             }
         });
         return clone;
@@ -45,22 +40,15 @@ function Model({ url, showTextures, isDragging }) {
             if (child.isMesh) {
                 const isActive = hovered || isDragging;
 
-                if (showTextures) {
-                    child.material = isActive ? child.userData.texturedHoverMaterial : child.userData.originalMaterial;
+                child.material = isActive ? child.userData.texturedHoverMaterial : child.userData.originalMaterial;
 
-                    // Crank up emissive if dragging
-                    if (isActive && child.material === child.userData.texturedHoverMaterial) {
-                        child.material.emissiveIntensity = isDragging ? 0.8 : 0.2;
-                    }
-
-                } else {
-                    child.material = child.userData.flatMaterial;
-                    const color = isActive ? 0x0058A3 : 0xffffff;
-                    child.material.color.setHex(color);
+                // Crank up emissive if dragging
+                if (isActive && child.material === child.userData.texturedHoverMaterial) {
+                    child.material.emissiveIntensity = isDragging ? 0.8 : 0.2;
                 }
             }
         });
-    }, [showTextures, hovered, isDragging, clonedScene]);
+    }, [hovered, isDragging, clonedScene]);
 
     return (
         <primitive
@@ -77,7 +65,7 @@ function Model({ url, showTextures, isDragging }) {
     );
 }
 
-function Node({ node, showTextures }) {
+function Node({ node }) {
     const { name, transform, children, asset } = node;
 
     // State for position to allow dragging
@@ -160,26 +148,21 @@ function Node({ node, showTextures }) {
             onPointerUp={handlePointerUp}
             onPointerMove={handlePointerMove}
         >
-            {asset && <Model url={asset} showTextures={showTextures} isDragging={isDragging} />}
+            {asset && <Model url={asset} isDragging={isDragging} />}
             {children && children.map((child, i) => (
-                <Node key={i} node={child} showTextures={showTextures} />
+                <Node key={i} node={child} />
             ))}
         </group>
     );
 }
 
-export default function Experience({ showTextures, autoRotate }) {
+export default function Experience({ autoRotate }) {
     const { scene } = useThree();
     const [sceneData, setSceneData] = useState(null);
 
     useEffect(() => {
-        // Set background color based on showTextures
-        if (showTextures) {
-            scene.background = new THREE.Color(0xcccccc); // Generic gray
-        } else {
-            scene.background = new THREE.Color(0xFFDB00); // Original yellow
-        }
-    }, [scene, showTextures]);
+        scene.background = new THREE.Color(0xcccccc); // Generic gray
+    }, [scene]);
 
     useEffect(() => {
         // Fetch scene structure
@@ -196,9 +179,7 @@ export default function Experience({ showTextures, autoRotate }) {
             <ambientLight intensity={0.8} />
             <directionalLight position={[5, 10, 7.5]} intensity={1} />
 
-            {showTextures && (
-                <gridHelper args={[20, 40]} />
-            )}
+            <gridHelper args={[20, 40]} />
 
             <OrbitControls
                 makeDefault
@@ -208,7 +189,7 @@ export default function Experience({ showTextures, autoRotate }) {
                 autoRotateSpeed={1.0}
             />
             {sceneData.nodes.map((node, i) => (
-                <Node key={i} node={node} showTextures={showTextures} />
+                <Node key={i} node={node} />
             ))}
         </>
     );

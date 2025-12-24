@@ -19,6 +19,7 @@ export default defineConfig({
                 main: resolve(__dirname, 'index.html'),
                 explorer: resolve(__dirname, 'vpc_explorer.html'),
                 interactive: resolve(__dirname, 'interactive.html'),
+                planner: resolve(__dirname, 'planner.html'),
             }
         }
     }

@@ -147,15 +147,21 @@ export default function Experience({ showTextures, autoRotate }) {
     const [sceneData, setSceneData] = useState(null);
 
     useEffect(() => {
-        // Set background color
-        scene.background = new THREE.Color(0xFFDB00);
+        // Set background color based on showTextures
+        if (showTextures) {
+            scene.background = new THREE.Color(0xcccccc); // Generic gray
+        } else {
+            scene.background = new THREE.Color(0xFFDB00); // Original yellow
+        }
+    }, [scene, showTextures]);
 
+    useEffect(() => {
         // Fetch scene structure
         fetch(SCENE_JSON_URL)
             .then(res => res.json())
             .then(data => setSceneData(data))
             .catch(err => console.error('Failed to load scene JSON:', err));
-    }, [scene]);
+    }, []);
 
     if (!sceneData) return null;
 
@@ -163,6 +169,11 @@ export default function Experience({ showTextures, autoRotate }) {
         <>
             <ambientLight intensity={0.8} />
             <directionalLight position={[5, 10, 7.5]} intensity={1} />
+
+            {showTextures && (
+                <gridHelper args={[20, 40]} />
+            )}
+
             <OrbitControls
                 makeDefault
                 target={[0.415, 0.257, -0.262]}

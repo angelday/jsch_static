@@ -24,6 +24,8 @@ function App() {
                 flexDirection: 'column',
                 gap: '8px',
                 width: '150px',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
             }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Canvas } from '@react-three/fiber';
 import Experience from './Experience.jsx';
+import CameraInfo, { CameraTracker, FpsTracker } from './CameraInfo.jsx';
 
 function App() {
     const [showTextures, setShowTextures] = useState(false);
@@ -14,14 +15,15 @@ function App() {
                 top: '20px',
                 left: '20px',
                 zIndex: 1000,
-                background: 'rgba(255, 255, 255, 0.8)',
+                background: 'rgba(255, 255, 255, 1.0)',
                 padding: '10px',
                 borderRadius: '8px',
                 fontFamily: 'sans-serif',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px'
+                gap: '8px',
+                width: '150px',
             }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
@@ -29,7 +31,7 @@ function App() {
                         checked={showTextures}
                         onChange={(e) => setShowTextures(e.target.checked)}
                     />
-                    Show Textures
+                    Textures
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
@@ -37,8 +39,9 @@ function App() {
                         checked={autoRotate}
                         onChange={(e) => setAutoRotate(e.target.checked)}
                     />
-                    Auto Rotate
+                    Auto rotation
                 </label>
+                <CameraInfo />
             </div>
             <Canvas
                 flat
@@ -50,6 +53,8 @@ function App() {
                 }}
                 gl={{ antialias: true }}
             >
+                <FpsTracker />
+                <CameraTracker />
                 <Experience showTextures={showTextures} autoRotate={autoRotate} />
             </Canvas>
         </>

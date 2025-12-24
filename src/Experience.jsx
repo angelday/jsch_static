@@ -7,7 +7,7 @@ const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
 const SCENE_BASE_URL = 'scene/';
 const DRACO_URL = 'https://www.gstatic.com/draco/v1/decoders/';
 
-function Model({ url, showTextures, isDragging, isSelected }) {
+function Model({ url, showTextures, isDragging }) {
     // Load the GLTF model
     const { scene } = useGLTF(SCENE_BASE_URL + url, DRACO_URL);
 
@@ -43,7 +43,7 @@ function Model({ url, showTextures, isDragging, isSelected }) {
     useEffect(() => {
         clonedScene.traverse((child) => {
             if (child.isMesh) {
-                const isActive = hovered || isDragging || isSelected;
+                const isActive = hovered || isDragging;
 
                 if (showTextures) {
                     child.material = isActive ? child.userData.texturedHoverMaterial : child.userData.originalMaterial;
@@ -60,7 +60,7 @@ function Model({ url, showTextures, isDragging, isSelected }) {
                 }
             }
         });
-    }, [showTextures, hovered, isDragging, isSelected, clonedScene]);
+    }, [showTextures, hovered, isDragging, clonedScene]);
 
     return (
         <primitive
@@ -87,14 +87,12 @@ function Node({ node, showTextures }) {
     });
 
     const [isDragging, setIsDragging] = useState(false);
-    const [isSelected, setIsSelected] = useState(false);
     const controls = useThree((state) => state.controls);
 
     // Dragging logic helpers
     const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
     const offset = useRef(new THREE.Vector3());
     const intersection = useRef(new THREE.Vector3());
-    const dragStartPos = useRef(new THREE.Vector3());
 
     const handlePointerDown = (e) => {
         // Only drag if this node has an asset (is an object)
@@ -105,9 +103,6 @@ function Node({ node, showTextures }) {
 
         // Disable OrbitControls while dragging
         if (controls) controls.enabled = false;
-
-        // Capture start position for click detection
-        dragStartPos.current.copy(position);
 
         // Calculate intersection with the floor plane at the object's current height
         plane.constant = -position.y;
@@ -131,11 +126,6 @@ function Node({ node, showTextures }) {
         if (controls) controls.enabled = true;
 
         e.target.releasePointerCapture(e.pointerId);
-
-        // Check for click (minimal movement)
-        if (position.distanceTo(dragStartPos.current) < 0.05) {
-            setIsSelected(prev => !prev);
-        }
     };
 
     const handlePointerMove = (e) => {
@@ -170,7 +160,7 @@ function Node({ node, showTextures }) {
             onPointerUp={handlePointerUp}
             onPointerMove={handlePointerMove}
         >
-            {asset && <Model url={asset} showTextures={showTextures} isDragging={isDragging} isSelected={isSelected} />}
+            {asset && <Model url={asset} showTextures={showTextures} isDragging={isDragging} />}
             {children && children.map((child, i) => (
                 <Node key={i} node={child} showTextures={showTextures} />
             ))}

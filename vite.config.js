@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
 
 // Serve files from the in-repo `assets` folder as static public assets so
 // `catalog.json` and `V3TMF8.json` are available at '/assets/catalog.json' and '/assets/V3TMF8.json'
 export default defineConfig({
+    plugins: [react()],
     // project root (default) — keep '.' for clarity
     root: '.',
     // Use relative base path so the site works in any subdirectory (e.g. on a CDN)
@@ -16,6 +18,7 @@ export default defineConfig({
             input: {
                 main: resolve(__dirname, 'index.html'),
                 explorer: resolve(__dirname, 'vpc_explorer.html'),
+                interactive: resolve(__dirname, 'interactive.html'),
             }
         }
     }

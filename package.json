@@ -1,5 +1,6 @@
 {
     "name": "vpc-viewer",
+    "type": "module",
     "version": "0.1.0",
     "private": true,
     "scripts": {
@@ -8,10 +9,15 @@
         "preview": "vite preview --port 5000"
     },
     "dependencies": {
+        "@react-three/drei": "^10.7.7",
+        "@react-three/fiber": "^9.4.2",
         "jszip": "^3.10.1",
-        "three": "^0.155.0"
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "three": "^0.182.0"
     },
     "devDependencies": {
+        "@vitejs/plugin-react": "^5.1.2",
         "vite": "^5.0.0"
     }
 }

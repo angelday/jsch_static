@@ -7,6 +7,7 @@ import CameraInfo, { CameraTracker, FpsTracker } from './CameraInfo.jsx';
 function App() {
     const [showTextures, setShowTextures] = useState(false);
     const [autoRotate, setAutoRotate] = useState(true);
+    const [resetKey, setResetKey] = useState(0);
 
     return (
         <>
@@ -43,6 +44,19 @@ function App() {
                     />
                     Auto rotation
                 </label>
+                <button
+                    onClick={() => setResetKey(prev => prev + 1)}
+                    style={{
+                        padding: '5px 10px',
+                        cursor: 'pointer',
+                        background: '#f0f0f0',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        fontSize: '14px'
+                    }}
+                >
+                    Reset scene
+                </button>
                 <CameraInfo />
             </div>
             <Canvas
@@ -57,7 +71,7 @@ function App() {
             >
                 <FpsTracker />
                 <CameraTracker />
-                <Experience showTextures={showTextures} autoRotate={autoRotate} />
+                <Experience key={resetKey} showTextures={showTextures} autoRotate={autoRotate} />
             </Canvas>
         </>
     );

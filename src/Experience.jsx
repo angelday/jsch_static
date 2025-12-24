@@ -7,7 +7,7 @@ const SCENE_JSON_URL = 'scene/scene_V3TMF8.json';
 const SCENE_BASE_URL = 'scene/';
 const DRACO_URL = 'https://www.gstatic.com/draco/v1/decoders/';
 
-function Model({ url, showTextures, isDragging }) {
+function Model({ url, showTextures, isDragging, isSelected }) {
     // Load the GLTF model
     const { scene } = useGLTF(SCENE_BASE_URL + url, DRACO_URL);
 
@@ -43,24 +43,24 @@ function Model({ url, showTextures, isDragging }) {
     useEffect(() => {
         clonedScene.traverse((child) => {
             if (child.isMesh) {
+                const isActive = hovered || isDragging || isSelected;
+
                 if (showTextures) {
-                    child.material = (hovered || isDragging) ? child.userData.texturedHoverMaterial : child.userData.originalMaterial;
+                    child.material = isActive ? child.userData.texturedHoverMaterial : child.userData.originalMaterial;
 
                     // Crank up emissive if dragging
-                    if (isDragging && child.material === child.userData.texturedHoverMaterial) {
-                        child.material.emissiveIntensity = 0.8;
-                    } else if (child.material === child.userData.texturedHoverMaterial) {
-                        child.material.emissiveIntensity = 0.2;
+                    if (isActive && child.material === child.userData.texturedHoverMaterial) {
+                        child.material.emissiveIntensity = isDragging ? 0.8 : 0.2;
                     }
 
                 } else {
                     child.material = child.userData.flatMaterial;
-                    const color = (hovered || isDragging) ? 0x0058A3 : 0xffffff;
+                    const color = isActive ? 0x0058A3 : 0xffffff;
                     child.material.color.setHex(color);
                 }
             }
         });
-    }, [showTextures, hovered, isDragging, clonedScene]);
+    }, [showTextures, hovered, isDragging, isSelected, clonedScene]);
 
     return (
         <primitive
@@ -87,12 +87,14 @@ function Node({ node, showTextures }) {
     });
 
     const [isDragging, setIsDragging] = useState(false);
+    const [isSelected, setIsSelected] = useState(false);
     const controls = useThree((state) => state.controls);
 
     // Dragging logic helpers
     const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
     const offset = useRef(new THREE.Vector3());
     const intersection = useRef(new THREE.Vector3());
+    const dragStartPos = useRef(new THREE.Vector3());
 
     const handlePointerDown = (e) => {
         // Only drag if this node has an asset (is an object)
@@ -103,6 +105,9 @@ function Node({ node, showTextures }) {
 
         // Disable OrbitControls while dragging
         if (controls) controls.enabled = false;
+
+        // Capture start position for click detection
+        dragStartPos.current.copy(position);
 
         // Calculate intersection with the floor plane at the object's current height
         plane.constant = -position.y;
@@ -126,6 +131,11 @@ function Node({ node, showTextures }) {
         if (controls) controls.enabled = true;
 
         e.target.releasePointerCapture(e.pointerId);
+
+        // Check for click (minimal movement)
+        if (position.distanceTo(dragStartPos.current) < 0.05) {
+            setIsSelected(prev => !prev);
+        }
     };
 
     const handlePointerMove = (e) => {
@@ -160,7 +170,7 @@ function Node({ node, showTextures }) {
             onPointerUp={handlePointerUp}
             onPointerMove={handlePointerMove}
         >
-            {asset && <Model url={asset} showTextures={showTextures} isDragging={isDragging} />}
+            {asset && <Model url={asset} showTextures={showTextures} isDragging={isDragging} isSelected={isSelected} />}
             {children && children.map((child, i) => (
                 <Node key={i} node={child} showTextures={showTextures} />
             ))}
